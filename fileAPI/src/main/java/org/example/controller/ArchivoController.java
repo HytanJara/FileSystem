@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/usuarios/{nombre}/archivos")
@@ -273,6 +274,127 @@ public class ArchivoController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Error al buscar el usuario"));
         }
     }
+
+    @PostMapping("/copiar")
+    public ResponseEntity<?> copiarArchivo(
+            @PathVariable("nombre") String nombre,
+            @RequestBody Map<String, String> request) {
+        try {
+            Usuario user = JsonUtil.buscarPorNombre(nombre);
+
+            String origenPath = request.get("origenPath");   // solo la ruta al directorio origen
+            String destinoPath = request.get("destinoPath"); // solo la ruta al directorio destino
+            String nombreArchivo = request.get("nombre");
+            String extension = request.get("extension");
+
+            Directorio origenDir = buscarDirectorio(user, origenPath);
+            Directorio destinoDir = buscarDirectorio(user, destinoPath);
+
+            if (origenDir == null || destinoDir == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Directorio origen o destino no encontrado"));
+            }
+
+            // buscar archivo en el origen
+            Optional<Archivo> archivoOriginal = origenDir.getArchivos().stream()
+                    .filter(a -> a.getNombre().equals(nombreArchivo) && a.getExtension().equals(extension))
+                    .findFirst();
+
+            if (archivoOriginal.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "Archivo de origen no encontrado"));
+            }
+
+            // verificar si ya existe en destino
+            boolean existe = destinoDir.getArchivos().stream()
+                    .anyMatch(a -> a.getNombre().equals(nombreArchivo) && a.getExtension().equals(extension));
+            if (existe) {
+                return ResponseEntity.status(409).body(Map.of("error", "Ya existe un archivo con ese nombre en el destino"));
+            }
+
+            // crear copia
+            Archivo copia = new Archivo(nombreArchivo, extension, archivoOriginal.get().getContenido());
+
+            if (!user.puedeAgregarArchivo(copia.getTamano())) {
+                return ResponseEntity.status(413).body(Map.of("error", "No hay espacio suficiente para copiar el archivo"));
+            }
+
+            destinoDir.getArchivos().add(copia);
+            user.recalcularEspacioUsado();
+            JsonUtil.guardarUsuario(user);
+
+            return ResponseEntity.ok(Map.of("mensaje", "Archivo copiado correctamente"));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error procesando la copia"));
+        }
+    }
+    // mover archivos
+    @PostMapping("/mover")
+    public ResponseEntity<?> moverArchivo(
+            @PathVariable("nombre") String nombre, // corregido
+            @RequestBody Map<String, String> request) {
+        try {
+            Usuario user = JsonUtil.buscarPorNombre(nombre);
+
+            String origenPath = request.get("origenPath");   // solo directorio
+            String destinoPath = request.get("destinoPath"); // solo directorio
+            String nombreArchivo = request.get("nombre");
+            String extension = request.get("extension");
+
+            Directorio origenDir = buscarDirectorio(user, origenPath);
+            Directorio destinoDir = buscarDirectorio(user, destinoPath);
+
+            if (origenDir == null || destinoDir == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Directorio origen o destino no encontrado"));
+            }
+
+            // buscar archivo en origen
+            Optional<Archivo> archivoOriginal = origenDir.getArchivos().stream()
+                    .filter(a -> a.getNombre().equals(nombreArchivo) && a.getExtension().equals(extension))
+                    .findFirst();
+
+            if (archivoOriginal.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "Archivo de origen no encontrado"));
+            }
+
+            // verificar si ya existe en destino
+            boolean existe = destinoDir.getArchivos().stream()
+                    .anyMatch(a -> a.getNombre().equals(nombreArchivo) && a.getExtension().equals(extension));
+            if (existe) {
+                return ResponseEntity.status(409).body(Map.of("error", "Ya existe un archivo con ese nombre en el destino"));
+            }
+
+            // mover significa: cambiar de referencia sin clonar
+            Archivo archivoMovido = archivoOriginal.get();
+
+            // eliminar del origen
+            origenDir.getArchivos().remove(archivoMovido);
+
+            // agregar al destino
+            destinoDir.getArchivos().add(archivoMovido);
+
+            // actualizar fechas
+            archivoMovido.setFechaModificacion(java.time.LocalDateTime.now());
+            origenDir.setFechaModificacion(java.time.LocalDateTime.now());
+            destinoDir.setFechaModificacion(java.time.LocalDateTime.now());
+
+            // recalcular espacio (opcional pero consistente)
+            user.recalcularEspacioUsado();
+
+            // guardar
+            JsonUtil.guardarUsuario(user);
+
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Archivo movido correctamente",
+                    "nuevoPath", destinoPath + "/" + nombreArchivo + "." + extension
+            ));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error procesando el movimiento"));
+        }
+    }
+
+
+
 
 
 }

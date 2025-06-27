@@ -2,36 +2,66 @@
   "id" : "78074e5d-d5a1-4dbd-8708-34f1c3f7056f",
   "nombre" : "juan",
   "espacioMaximo" : 1000000,
-  "espacioUsado" : 117,
+  "espacioUsado" : 159,
   "directorioRaiz" : {
     "id" : "6241153f-e3f9-4784-b305-1f187155fe2e",
     "nombre" : "root",
     "fechaCreacion" : [ 2025, 6, 25, 14, 12, 48, 403861700 ],
-    "fechaModificacion" : [ 2025, 6, 26, 18, 27, 49, 806242900 ],
+    "fechaModificacion" : [ 2025, 6, 27, 13, 48, 57, 58867400 ],
     "archivos" : [ ],
     "subdirectorios" : [ {
       "id" : "34ff00c9-84d6-4f14-9615-bea9426e33a1",
       "nombre" : "fotos",
       "fechaCreacion" : [ 2025, 6, 26, 18, 27, 49, 806242900 ],
-      "fechaModificacion" : [ 2025, 6, 26, 18, 27, 49, 806242900 ],
-      "archivos" : [ ],
+      "fechaModificacion" : [ 2025, 6, 27, 16, 57, 21, 15665400 ],
+      "archivos" : [ {
+        "id" : "9d01ea28-a52c-49e0-95b7-7ee5570f9d08",
+        "nombre" : "primerafoto",
+        "extension" : "txt",
+        "contenido" : "Contenido del archivo",
+        "fechaCreacion" : [ 2025, 6, 27, 13, 49, 15, 916820000 ],
+        "fechaModificacion" : [ 2025, 6, 27, 13, 49, 15, 916820000 ],
+        "tamano" : 21
+      } ],
       "subdirectorios" : [ ]
+    }, {
+      "id" : "6591daae-2c19-4958-8785-4b5490013ab0",
+      "nombre" : "masfotos",
+      "fechaCreacion" : [ 2025, 6, 27, 13, 48, 57, 58867400 ],
+      "fechaModificacion" : [ 2025, 6, 27, 16, 58, 29, 226643500 ],
+      "archivos" : [ {
+        "id" : "e3b774af-d991-4be2-8e31-2ff1ccf78b5e",
+        "nombre" : "demoasdhijo",
+        "extension" : "txt",
+        "contenido" : "Hola desde el sistema distribuido",
+        "fechaCreacion" : [ 2025, 6, 25, 14, 48, 21, 472558600 ],
+        "fechaModificacion" : [ 2025, 6, 27, 16, 57, 21, 15665400 ],
+        "tamano" : 33
+      }, {
+        "id" : "9367e756-2b6f-4ddc-8639-a868435c5383",
+        "nombre" : "primerafoto",
+        "extension" : "txt",
+        "contenido" : "Contenido del archivo",
+        "fechaCreacion" : [ 2025, 6, 27, 16, 57, 42, 805438800 ],
+        "fechaModificacion" : [ 2025, 6, 27, 16, 57, 42, 805438800 ],
+        "tamano" : 21
+      } ],
+      "subdirectorios" : [ {
+        "id" : "b509cbcd-bc26-476d-83d2-3f280b24b9ad",
+        "nombre" : "enero",
+        "fechaCreacion" : [ 2025, 6, 27, 16, 58, 29, 226643500 ],
+        "fechaModificacion" : [ 2025, 6, 27, 16, 58, 29, 226643500 ],
+        "archivos" : [ ],
+        "subdirectorios" : [ ]
+      } ]
     } ]
   },
   "directorioCompartidos" : {
     "id" : "881976ec-1350-420f-a82d-a444bfc12b29",
     "nombre" : "compartidos",
     "fechaCreacion" : [ 2025, 6, 25, 14, 12, 48, 403861700 ],
-    "fechaModificacion" : [ 2025, 6, 26, 17, 38, 42, 215911300 ],
+    "fechaModificacion" : [ 2025, 6, 27, 16, 18, 42, 198865400 ],
     "archivos" : [ {
-      "id" : "e3b774af-d991-4be2-8e31-2ff1ccf78b5e",
-      "nombre" : "demoasdhijo",
-      "extension" : "txt",
-      "contenido" : "Hola desde el sistema distribuido",
-      "fechaCreacion" : [ 2025, 6, 25, 14, 48, 21, 472558600 ],
-      "fechaModificacion" : [ 2025, 6, 25, 14, 48, 21, 472558600 ],
-      "tamano" : 33
-    }, {
       "id" : "827d7b75-f6a9-47ad-a24f-afb012b5344f",
       "nombre" : "demoasdhijo",
       "extension" : "txt",
