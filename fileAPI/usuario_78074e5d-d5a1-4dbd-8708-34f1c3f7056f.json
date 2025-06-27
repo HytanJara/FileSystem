@@ -1,0 +1,61 @@
+{
+  "id" : "78074e5d-d5a1-4dbd-8708-34f1c3f7056f",
+  "nombre" : "juan",
+  "espacioMaximo" : 1000000,
+  "espacioUsado" : 117,
+  "directorioRaiz" : {
+    "id" : "6241153f-e3f9-4784-b305-1f187155fe2e",
+    "nombre" : "root",
+    "fechaCreacion" : [ 2025, 6, 25, 14, 12, 48, 403861700 ],
+    "fechaModificacion" : [ 2025, 6, 26, 18, 27, 49, 806242900 ],
+    "archivos" : [ ],
+    "subdirectorios" : [ {
+      "id" : "34ff00c9-84d6-4f14-9615-bea9426e33a1",
+      "nombre" : "fotos",
+      "fechaCreacion" : [ 2025, 6, 26, 18, 27, 49, 806242900 ],
+      "fechaModificacion" : [ 2025, 6, 26, 18, 27, 49, 806242900 ],
+      "archivos" : [ ],
+      "subdirectorios" : [ ]
+    } ]
+  },
+  "directorioCompartidos" : {
+    "id" : "881976ec-1350-420f-a82d-a444bfc12b29",
+    "nombre" : "compartidos",
+    "fechaCreacion" : [ 2025, 6, 25, 14, 12, 48, 403861700 ],
+    "fechaModificacion" : [ 2025, 6, 26, 17, 38, 42, 215911300 ],
+    "archivos" : [ {
+      "id" : "e3b774af-d991-4be2-8e31-2ff1ccf78b5e",
+      "nombre" : "demoasdhijo",
+      "extension" : "txt",
+      "contenido" : "Hola desde el sistema distribuido",
+      "fechaCreacion" : [ 2025, 6, 25, 14, 48, 21, 472558600 ],
+      "fechaModificacion" : [ 2025, 6, 25, 14, 48, 21, 472558600 ],
+      "tamano" : 33
+    }, {
+      "id" : "827d7b75-f6a9-47ad-a24f-afb012b5344f",
+      "nombre" : "demoasdhijo",
+      "extension" : "txt",
+      "contenido" : "Hola desde el sistema distribuido2",
+      "fechaCreacion" : [ 2025, 6, 25, 14, 48, 55, 474027000 ],
+      "fechaModificacion" : [ 2025, 6, 25, 14, 48, 55, 474027000 ],
+      "tamano" : 34
+    }, {
+      "id" : "2764eaa3-fe07-4bfa-a8f1-91ff8fa86664",
+      "nombre" : "demo",
+      "extension" : "txt",
+      "contenido" : "Archivo modificado desde el frontend",
+      "fechaCreacion" : [ 2025, 6, 26, 14, 57, 22, 125977200 ],
+      "fechaModificacion" : [ 2025, 6, 26, 14, 57, 22, 125977200 ],
+      "tamano" : 36
+    }, {
+      "id" : "4c6186ed-2e8e-4648-b750-995f21d668e6",
+      "nombre" : "documento1",
+      "extension" : "txt",
+      "contenido" : "Hola documento",
+      "fechaCreacion" : [ 2025, 6, 26, 17, 38, 42, 215911300 ],
+      "fechaModificacion" : [ 2025, 6, 26, 17, 38, 42, 215911300 ],
+      "tamano" : 14
+    } ],
+    "subdirectorios" : [ ]
+  }
+}

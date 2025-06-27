@@ -1,0 +1,22 @@
+{
+  "id" : "b58f987a-51d9-465f-be1d-e79f71d9cc8e",
+  "nombre" : "pedro2",
+  "espacioMaximo" : 1000,
+  "espacioUsado" : 0,
+  "directorioRaiz" : {
+    "id" : "c83afc59-acc5-4d18-966f-5f710608e177",
+    "nombre" : "root",
+    "fechaCreacion" : [ 2025, 6, 26, 14, 13, 51, 168576700 ],
+    "fechaModificacion" : [ 2025, 6, 26, 14, 13, 51, 168576700 ],
+    "archivos" : [ ],
+    "subdirectorios" : [ ]
+  },
+  "directorioCompartidos" : {
+    "id" : "6a94c6ad-3017-40fa-afd0-1931dc9ebb17",
+    "nombre" : "compartidos",
+    "fechaCreacion" : [ 2025, 6, 26, 14, 13, 51, 168576700 ],
+    "fechaModificacion" : [ 2025, 6, 26, 14, 13, 51, 168576700 ],
+    "archivos" : [ ],
+    "subdirectorios" : [ ]
+  }
+}

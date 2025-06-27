@@ -1,0 +1,176 @@
+package org.example.controller;
+
+import org.example.model.Directorio;
+import org.example.model.Usuario;
+import org.example.util.JsonUtil;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.*;
+
+@RestController
+@RequestMapping("/carpetas")
+public class CarpetaController {
+
+    // Crear nueva carpeta en una ruta específica
+    @PostMapping("/{usuario}/crear")
+    public ResponseEntity<?> crearCarpeta(
+            @PathVariable String usuario,
+            @RequestBody Map<String, String> request) {
+
+        String ruta = request.get("path");         // Ejemplo: "root/documentos"
+        String nombreNueva = request.get("nombre"); // Ejemplo: "fotos"
+
+        try {
+            Usuario user = JsonUtil.buscarPorNombre(usuario);
+            Directorio destino = buscarDirectorioPorRuta(user.getDirectorioRaiz(), ruta);
+
+            for (Directorio sub : destino.getSubdirectorios()) {
+                if (sub.getNombre().equals(nombreNueva)) {
+                    return ResponseEntity.badRequest().body("Ya existe una carpeta con ese nombre en esta ruta.");
+                }
+            }
+
+            Directorio nueva = new Directorio(nombreNueva, destino);
+            destino.getSubdirectorios().add(nueva);
+            destino.setFechaModificacion(java.time.LocalDateTime.now());
+
+            JsonUtil.guardarUsuario(user);
+            return ResponseEntity.ok("Carpeta creada correctamente.");
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Error al cargar/guardar usuario.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.badRequest().body("Ruta no encontrada.");
+        }
+    }
+    // Listar contenido de una carpeta
+    @PostMapping("/{usuario}/listar")
+    public ResponseEntity<?> listarContenido(
+            @PathVariable String usuario,
+            @RequestBody Map<String, String> request) {
+
+        String ruta = request.get("ruta");
+
+        try {
+            Usuario user = JsonUtil.buscarPorNombre(usuario);
+            Directorio dir = buscarDirectorioPorRuta(user.getDirectorioRaiz(), ruta);
+
+            Map<String, Object> contenido = new HashMap<>();
+            contenido.put("archivos", dir.getArchivos());
+            contenido.put("subdirectorios", dir.getSubdirectorios());
+            return ResponseEntity.ok(contenido);
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Error al acceder a datos.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.badRequest().body("Ruta no válida.");
+        }
+    }
+
+    // Función auxiliar para navegar un path tipo "root/docs/proyectos"
+    private Directorio buscarDirectorioPorRuta(Directorio actual, String ruta) {
+        String[] partes = ruta.split("/");
+        for (String nombre : partes) {
+            if (nombre.equals(actual.getNombre())) continue;
+            Optional<Directorio> siguiente = actual.getSubdirectorios().stream()
+                    .filter(d -> d.getNombre().equals(nombre))
+                    .findFirst();
+            if (siguiente.isEmpty()) throw new NoSuchElementException("No se encontró: " + nombre);
+            actual = siguiente.get();
+        }
+        return actual;
+    }
+    @DeleteMapping("/{nombre}")
+    public ResponseEntity<?> eliminarCarpeta(
+            @PathVariable String nombre,
+            @RequestBody Map<String, String> body) {
+        try {
+            String path = body.get("path");
+            if (path == null || path.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Path requerido"));
+            }
+
+            Usuario usuario = JsonUtil.buscarPorNombre(nombre);
+            Directorio raiz = usuario.getDirectorioRaiz();
+
+            // Separar el último segmento (la carpeta a eliminar)
+            String[] partes = path.split("/");
+            if (partes.length < 2) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No se puede eliminar el directorio raíz"));
+            }
+
+            String nombreCarpeta = partes[partes.length - 1];
+            String pathPadre = String.join("/", Arrays.copyOf(partes, partes.length - 1));
+
+            Directorio padre = buscarDirectorio(usuario, pathPadre);
+            if (padre == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Directorio padre no encontrado"));
+            }
+
+            boolean eliminado = padre.eliminarSubdirectorio(nombreCarpeta);
+            if (!eliminado) {
+                return ResponseEntity.status(404).body(Map.of("error", "Subdirectorio no encontrado"));
+            }
+
+            usuario.recalcularEspacioUsado();
+            JsonUtil.guardarUsuario(usuario);
+            return ResponseEntity.ok(Map.of("mensaje", "Carpeta eliminada correctamente"));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error al eliminar la carpeta"));
+        }
+    }
+    private Directorio buscarDirectorio(Usuario usuario, String path) {
+        if (path.equals("root")) return usuario.getDirectorioRaiz();
+        if (path.equals("compartidos")) return usuario.getDirectorioCompartidos();
+
+        String[] partes = path.split("/");
+        Directorio actual = usuario.getDirectorioRaiz();
+
+        for (int i = 1; i < partes.length; i++) {
+            String nombre = partes[i];
+            Optional<Directorio> sub = actual.getSubdirectorios().stream()
+                    .filter(d -> d.getNombre().equals(nombre))
+                    .findFirst();
+            if (sub.isEmpty()) return null;
+            actual = sub.get();
+        }
+
+        return actual;
+    }
+    private boolean buscarRutaDeCarpeta(Directorio actual, String nombreCarpeta, String rutaActual, List<String> resultado) {
+        if (actual.getNombre().equals(nombreCarpeta)) {
+            resultado.add(rutaActual);
+            return true;
+        }
+
+        for (Directorio sub : actual.getSubdirectorios()) {
+            boolean encontrada = buscarRutaDeCarpeta(sub, nombreCarpeta, rutaActual + "/" + sub.getNombre(), resultado);
+            if (encontrada) return true;
+        }
+
+        return false;
+    }
+
+    @GetMapping("/{nombre}/ruta")
+    public ResponseEntity<?> obtenerRutaCarpeta(
+            @PathVariable String nombre,
+            @RequestParam String nombreCarpeta) {
+        try {
+            Usuario usuario = JsonUtil.buscarPorNombre(nombre);
+            List<String> ruta = new ArrayList<>();
+            boolean encontrada = buscarRutaDeCarpeta(usuario.getDirectorioRaiz(), nombreCarpeta, "root", ruta);
+
+            if (!encontrada) {
+                return ResponseEntity.status(404).body(Map.of("error", "Carpeta no encontrada"));
+            }
+
+            return ResponseEntity.ok(Map.of("ruta", ruta.get(0)));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error al buscar el usuario"));
+        }
+    }
+
+}
