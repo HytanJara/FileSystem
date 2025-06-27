@@ -94,7 +94,7 @@ public class CarpetaController {
             Usuario usuario = JsonUtil.buscarPorNombre(nombre);
             Directorio raiz = usuario.getDirectorioRaiz();
 
-            // Separar el último segmento (la carpeta a eliminar)
+            // Separar el último segmento
             String[] partes = path.split("/");
             if (partes.length < 2) {
                 return ResponseEntity.badRequest().body(Map.of("error", "No se puede eliminar el directorio raíz"));
@@ -172,5 +172,78 @@ public class CarpetaController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Error al buscar el usuario"));
         }
     }
+
+    @PostMapping("/{nombre}/mover")
+    public ResponseEntity<?> moverCarpeta(
+            @PathVariable("nombre") String nombre,
+            @RequestBody Map<String, String> request) {
+        try {
+            String origenPath = request.get("origenPath");
+            String destinoPath = request.get("destinoPath");
+
+            if (origenPath == null || destinoPath == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Faltan rutas en el cuerpo de la solicitud"));
+            }
+
+            Usuario usuario = JsonUtil.buscarPorNombre(nombre);
+
+            // separar el nombre de la carpeta a mover
+            String[] partesOrigen = origenPath.split("/");
+            String nombreCarpeta = partesOrigen[partesOrigen.length - 1];
+            String pathPadreOrigen = String.join("/", java.util.Arrays.copyOf(partesOrigen, partesOrigen.length - 1));
+
+            // obtener referencias
+            Directorio padreOrigen = buscarDirectorio(usuario, pathPadreOrigen);
+            Directorio destino = buscarDirectorio(usuario, destinoPath);
+
+            if (padreOrigen == null || destino == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Directorio origen o destino no encontrado"));
+            }
+
+            // buscar el subdirectorio a mover
+            Directorio dirAMover = padreOrigen.getSubdirectorios().stream()
+                    .filter(d -> d.getNombre().equals(nombreCarpeta))
+                    .findFirst()
+                    .orElse(null);
+
+            if (dirAMover == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Carpeta de origen no encontrada"));
+            }
+
+            // verificar si ya existe en destino
+            boolean existe = destino.getSubdirectorios().stream()
+                    .anyMatch(d -> d.getNombre().equals(nombreCarpeta));
+            if (existe) {
+                return ResponseEntity.status(409).body(Map.of("error", "Ya existe una carpeta con ese nombre en el destino"));
+            }
+
+            // mover: eliminar del padre original
+            padreOrigen.getSubdirectorios().remove(dirAMover);
+
+            // actualizar referencia de padre
+            dirAMover.setPadre(destino);
+
+            // agregar al destino
+            destino.getSubdirectorios().add(dirAMover);
+
+            // actualizar fechas
+            dirAMover.setFechaModificacion(java.time.LocalDateTime.now());
+            padreOrigen.setFechaModificacion(java.time.LocalDateTime.now());
+            destino.setFechaModificacion(java.time.LocalDateTime.now());
+
+            // recalcular espacio
+            usuario.recalcularEspacioUsado();
+            JsonUtil.guardarUsuario(usuario);
+
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Carpeta movida correctamente",
+                    "nuevoPath", destinoPath + "/" + nombreCarpeta
+            ));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error procesando el movimiento: " + e.getMessage()));
+        }
+    }
+
 
 }
