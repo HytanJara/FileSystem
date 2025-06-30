@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import org.example.model.Archivo;
 import org.example.model.Directorio;
 import org.example.model.Usuario;
 import org.example.util.JsonUtil;
@@ -244,6 +245,65 @@ public class CarpetaController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Error procesando el movimiento: " + e.getMessage()));
         }
     }
+
+    @PostMapping("/{nombre}/compartir")
+    public ResponseEntity<?> compartirCarpeta(
+            @PathVariable String nombre,   // usuario origen
+            @RequestBody Map<String, String> request) {
+        try {
+            String path = request.get("path");  // ruta completa de la carpeta a compartir
+            String destinatario = request.get("destinatario");
+
+            Usuario emisor = JsonUtil.buscarPorNombre(nombre);
+            Usuario receptor = JsonUtil.buscarPorNombre(destinatario);
+
+            // localizar la carpeta origen
+            Directorio carpetaOriginal = buscarDirectorio(emisor, path);
+            if (carpetaOriginal == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Carpeta no encontrada"));
+            }
+
+            // verificar si ya existe en el destino (compartidos)
+            boolean yaExiste = receptor.getDirectorioCompartidos().getSubdirectorios().stream()
+                    .anyMatch(d -> d.getNombre().equals(carpetaOriginal.getNombre()));
+
+            if (yaExiste) {
+                return ResponseEntity.status(409).body(Map.of(
+                        "error", "Ya existe una carpeta con ese nombre en la carpeta de compartidos del destinatario"
+                ));
+            }
+
+            // clonar la carpeta completa recursivamente
+            Directorio copia = clonarDirectorio(carpetaOriginal, null);
+
+            receptor.getDirectorioCompartidos().getSubdirectorios().add(copia);
+            receptor.recalcularEspacioUsado();
+            JsonUtil.guardarUsuario(receptor);
+
+            return ResponseEntity.ok(Map.of("mensaje", "Carpeta compartida correctamente"));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error al compartir carpeta: " + e.getMessage()));
+        }
+    }
+
+    private Directorio clonarDirectorio(Directorio original, Directorio padre) {
+        Directorio copia = new Directorio(original.getNombre(), padre);
+
+        // clonar archivos
+        for (Archivo a : original.getArchivos()) {
+            copia.getArchivos().add(new Archivo(a.getNombre(), a.getExtension(), a.getContenido()));
+        }
+
+        // clonar subdirectorios
+        for (Directorio sub : original.getSubdirectorios()) {
+            copia.getSubdirectorios().add(clonarDirectorio(sub, copia));
+        }
+
+        return copia;
+    }
+
+
 
 
 }
