@@ -45,7 +45,6 @@ public class CarpetaController {
             return ResponseEntity.badRequest().body("Ruta no encontrada.");
         }
     }
-    // Listar contenido de una carpeta
     @PostMapping("/{usuario}/listar")
     public ResponseEntity<?> listarContenido(
             @PathVariable String usuario,
@@ -55,7 +54,7 @@ public class CarpetaController {
 
         try {
             Usuario user = JsonUtil.buscarPorNombre(usuario);
-            Directorio dir = buscarDirectorioPorRuta(user.getDirectorioRaiz(), ruta);
+            Directorio dir = buscarDirectorioPorRutaAlterno(user, ruta);
 
             Map<String, Object> contenido = new HashMap<>();
             contenido.put("archivos", dir.getArchivos());
@@ -68,6 +67,8 @@ public class CarpetaController {
             return ResponseEntity.badRequest().body("Ruta no válida.");
         }
     }
+
+
 
     // Función auxiliar para navegar un path tipo "root/docs/proyectos"
     private Directorio buscarDirectorioPorRuta(Directorio actual, String ruta) {
@@ -82,6 +83,34 @@ public class CarpetaController {
         }
         return actual;
     }
+
+    private Directorio buscarDirectorioPorRutaAlterno(Usuario user, String ruta) {
+        String[] partes = ruta.split("/");
+        Directorio actual;
+
+        // punto de partida según la raíz
+        if (partes[0].equals("root")) {
+            actual = user.getDirectorioRaiz();
+        } else if (partes[0].equals("compartidos")) {
+            actual = user.getDirectorioCompartidos();
+        } else {
+            throw new NoSuchElementException("La ruta debe iniciar con root o compartidos");
+        }
+
+        for (int i = 1; i < partes.length; i++) {
+            String nombre = partes[i];
+            Optional<Directorio> siguiente = actual.getSubdirectorios().stream()
+                    .filter(d -> d.getNombre().equals(nombre))
+                    .findFirst();
+            if (siguiente.isEmpty()) {
+                throw new NoSuchElementException("No se encontró el directorio: " + nombre);
+            }
+            actual = siguiente.get();
+        }
+        return actual;
+    }
+
+
     @DeleteMapping("/{nombre}")
     public ResponseEntity<?> eliminarCarpeta(
             @PathVariable String nombre,
